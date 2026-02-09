@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Parse arguments
+PUSH=false
+if [[ "${1:-}" == "--push" ]]; then
+    PUSH=true
+fi
+
+# Check if we're on the main branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+if [[ "$current_branch" != "main" ]]; then
+    echo "Error: Must be on main branch to create a release (currently on: $current_branch)"
+    exit 1
+fi
+
+# Check for unstaged or uncommitted changes
+if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "Error: Working directory has unstaged or uncommitted changes"
+    exit 1
+fi
+
+# Check for untracked files
+if [[ -n $(git ls-files --others --exclude-standard) ]]; then
+    echo "Error: Working directory has untracked files"
+    exit 1
+fi
+
+# Generate tag name based on current date with incrementing counter
+date_prefix="v$(date +%Y.%m.%d)"
+
+# Find existing tags for today and determine the next counter value
+existing_tags=$(git tag -l "${date_prefix}.*" | sed "s/^${date_prefix}\.//" | sort -n)
+if [[ -z "$existing_tags" ]]; then
+    counter=0
+else
+    max_counter=$(echo "$existing_tags" | tail -1)
+    counter=$((max_counter + 1))
+fi
+
+tag_name="${date_prefix}.${counter}"
+
+# Check if tag already exists (shouldn't happen, but just in case)
+if git rev-parse "$tag_name" >/dev/null 2>&1; then
+    echo "Error: Tag $tag_name already exists"
+    exit 1
+fi
+
+# Create the tag
+git tag "$tag_name"
+echo "Created tag: $tag_name"
+
+# Push the tag to origin or show the command
+if [[ "$PUSH" == true ]]; then
+    git push origin "$tag_name"
+    echo "Pushed tag $tag_name to origin"
+else
+    echo "To push the tag, run:"
+    echo "  git push origin $tag_name"
+fi
+
+
