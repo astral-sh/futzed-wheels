@@ -48,9 +48,10 @@ jobs:
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: wheels
+          path: dist/
 
       - name: Create draft release
-        run: gh release create --draft "${GITHUB_REF_NAME}" dist/*.whl --title "${GITHUB_REF_NAME}" --notes "Release ${GITHUB_REF_NAME}"
+        run: gh release create --draft "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes "Release ${GITHUB_REF_NAME}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
