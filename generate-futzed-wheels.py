@@ -1,6 +1,10 @@
 # /// script
 # requires-python = ">=3.14"
 # dependencies = []
+#
+# [tool.uv]
+# require-build-hashes = true
+# preview-features = ["build-dependency-hashes"]
 # ///
 
 
